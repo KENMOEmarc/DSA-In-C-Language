@@ -2,28 +2,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include "library.h"
-//-----------------------------------------------BOOK-----------------------------------------//
-void init(Book *book){
-    char title[33];
-    char autor[15];
-    int ISBN;
-    int year;
-    printf("Enter book's title : ");
-    scanf("%s", title);
-    printf("Enter book's autor :");
-    scanf("%s", autor);
-    printf("Enter book's ISBN :");
-    scanf("%d", &(ISBN));
-    printf("Publication year :");
-    scanf("%d", &(year));
-    strcpy(book -> title, title);
-    strcpy(book -> autor, autor);
-    book -> ISBN = ISBN;
-    book -> pubYear = year;
-    book -> disponibility = True;
-    book -> set_disponibility = set_disp;
-    book -> info = book_info;
-    book -> is_available = get_available;
+C// BOOK
+void init(Book *book) {
+    book->init_book         = init;
+    book->set_disponibility = set_disp;
+    book->info              = book_info;
+    book->is_available      = get_available;
+
+    char title[33] = {0};
+    char autor[15] = {0};
+    int isbn = 0;
+    int year = 0;
+
+    printf("Titre (max 32) : ");
+    scanf("%32s", title);
+
+    printf("Auteur (max 14) : ");
+    scanf("%14s", autor);
+
+    printf("ISBN : ");
+    scanf("%d", &isbn);
+
+    printf("Année : ");
+    scanf("%d", &year);
+
+    strcpy(book->title, title);
+    strcpy(book->autor, autor);
+    book->ISBN          = isbn;
+    book->pubYear       = year;
+    book->disponibility = True;
 }
 void book_info(Book *book){
     printf("|| Title : %s , Autor : %s , ISBN : %d , Pub year : %d , Disponibility :", book -> title, book -> autor, book -> ISBN, book -> pubYear);
@@ -39,24 +46,29 @@ void set_disp(Boolean boolean, Book *book){
 void get_available(Book *book){
     printf("%s ", (book -> disponibility) ? "Available !\n" : "Unavaible !\n");
 }
-//--------------------------------------------SUBSCRIBER-------------------------------------------//
-void init_subscriber(Subscriber *subscriber){
-    char name[15];
-    char surname[15];
-    int id;
-    printf("Enter subscriber's name : ");
-    scanf("%s", name);
-    printf("Enter subscriber's surname :");
-    scanf("%s", surname);
-    printf("Enter subscriber's id :");
+// SUBSCRIBER
+void init_subscriber(Subscriber *subscriber) {
+    subscriber->introduce_yourself = introduce;
+    subscriber->borrow_book        = borrow;
+    subscriber->giveback_book      = give_back;
+
+    char name[15]    = {0};
+    char surname[15] = {0};
+    int id = 0;
+
+    printf("Prénom (max 14) : ");
+    scanf("%14s", name);
+
+    printf("Nom (max 14) : ");
+    scanf("%14s", surname);
+
+    printf("ID : ");
     scanf("%d", &id);
-    strcpy(subscriber -> name, name);
-    strcpy(subscriber -> surname, surname);
-    subscriber -> id = id;
-    subscriber -> history = new_stack();
-    subscriber -> introduce_yourself = introduce;
-    subscriber -> borrow_book = borrow;
-    subscriber -> giveback_book = give_back;
+
+    strcpy(subscriber->name,    name);
+    strcpy(subscriber->surname, surname);
+    subscriber->id      = id;
+    subscriber->history = new_stack();
 }
 void introduce(Subscriber *subscriber){
     printf("Name : %s , Surname : %s , id : %d \n ", subscriber -> name, subscriber -> surname, subscriber -> id);
@@ -353,3 +365,4 @@ void clear_list(SList list){
     while (list != NULL)
         list = remove_first(list);
 }
+
