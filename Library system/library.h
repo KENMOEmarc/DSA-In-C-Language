@@ -1,451 +1,136 @@
-#if !defined(__LIBRARY_H__)
-#define __LIBRARY_H__
+#ifndef LIBRARY_H
+#define LIBRARY_H
 
-/**
- * @file library.h
- * @brief Fichier d'en-tête pour la gestion d'une bibliothèque.
- * 
- * Ce fichier définit les structures et fonctions nécessaires pour gérer des livres,
- * des abonnés, des historiques de transactions via des piles, et des listes de livres
- * et d'abonnés. Il utilise une approche orientée objet en C via des pointeurs de fonctions.
- * 
- * @author [KENMOE KEMGANG Marc Bertrand]
- * @date [20 Janvier 2025]
- * @version 1.1
- */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-//---------------------------------------------Bool-Enum---------------------------------------//
-/**
- * @enum Boolean
- * @brief Type énuméré représentant les valeurs booléennes.
- *
- * Utilisé pour des flags comme la disponibilité d'un livre.
- * - False : Valeur fausse (équivalente à 0).
- * - True : Valeur vraie (équivalente à 1).
- *
- * @note En C standard, on pourrait utiliser <stdbool.h>, mais ceci est une implémentation personnalisée.
- */
-typedef enum Boolean {
-    False, /**< Valeur fausse (0). */
-    True /**< Valeur vraie (1). */
+/* ===================== CONSTANTES ===================== */
+
+#define MAX_TITLE   64
+#define MAX_AUTHOR  32
+#define MAX_NAME    32
+#define MAX_SURNAME 32
+
+/* ===================== TYPES ===================== */
+
+typedef enum {
+    False = 0,
+    True  = 1
 } Boolean;
-//---------------------------------------------Op-Enum---------------------------------------//
-/**
- * @enum Transaction
- * @brief Type énuméré pour les types de transactions sur les livres.
- *
- * - borrow : Emprunt d'un livre par l'abonné.
- * - revert : Retour d'un livre à la bibliothèque.
- *
- * @note Utilisé dans l'historique des abonnés pour tracer les opérations.
- */
-typedef enum transaction {
-    borrow, /**< Transaction d'emprunt par l'abonné. */
-    revert /**< Transaction de retour. */
+
+typedef enum {
+    Borrow = 0,
+    Revert = 1
 } Transaction;
-//-----------------------------------------------BOOK-----------------------------------------//
-/**
- * @struct Book
- * @brief Structure représentant un livre dans la bibliothèque.
- *
- * Contient les informations sur un livre et des pointeurs vers des fonctions (méthodes) pour
- * simuler un comportement objet-oriented.
- *
- * @var Book::title
- * Titre du livre (chaîne de caractères, max 32 + '\0').
- *
- * @var Book::autor
- * Nom de l'auteur (max 14 + '\0').
- *
- * @var Book::ISBN
- * Numéro ISBN unique.
- *
- * @var Book::pubYear
- * Année de publication.
- *
- * @var Book::disponibility
- * Disponibilité du livre (True si disponible).
- *
- * @var Book::init_book
- * Pointeur vers fonction d'initialisation.
- *
- * @var Book::info
- * Pointeur vers fonction d'affichage des infos.
- *
- * @var Book::set_disponibility
- * Pointeur vers fonction pour définir la disponibilité.
- *
- * @var Book::is_available
- * Pointeur vers fonction pour vérifier la disponibilité.
- *
- * @note Attention aux overflows de chaînes ; utiliser strncpy pour les copies.
- */
-typedef struct Book Book;
-/**
- * @typedef INIT_BOOK
- * @brief Type de pointeur vers fonction pour initialiser un livre.
- * @param book Pointeur vers le livre à initialiser.
- */
-typedef void (*INIT_BOOK)(Book*);
-/**
- * @typedef INFO
- * @brief Type de pointeur vers fonction pour afficher les infos d'un livre.
- * @param book Pointeur vers le livre.
- */
-typedef void (*INFO)(Book*);
-/**
- * @typedef SETDISP
- * @brief Type de pointeur vers fonction pour définir la disponibilité.
- * @param boolean Nouvelle valeur de disponibilité.
- * @param book Pointeur vers le livre.
- */
-typedef void (*SETDISP)(Boolean, Book*);
-/**
- * @typedef ISAVAILABLE
- * @brief Type de pointeur vers fonction pour vérifier la disponibilité.
- * @param book Pointeur vers le livre.
- */
-typedef void (*ISAVAILABLE)(Book*);
+
+/* ===================== DECLARATIONS ANTICIPEES ===================== */
+
+typedef struct StackElement StackElement;
+typedef StackElement* Stack;
+
+/* ===================== STRUCTURES ===================== */
+
+/* -------- Livre -------- */
+
 typedef struct Book {
-    char title[33]; /**< Titre du livre. */
-    char autor[15]; /**< Nom de l'auteur. */
-    int ISBN; /**< Numéro ISBN. */
-    int pubYear; /**< Année de publication. */
-    Boolean disponibility; /**< Disponibilité. */
-    INIT_BOOK init_book; /**< Méthode d'initialisation. */
-    INFO info; /**< Méthode d'affichage. */
-    SETDISP set_disponibility; /**< Méthode pour setter disponibilité. */
-    ISAVAILABLE is_available; /**< Méthode pour checker disponibilité. */
+    char title[MAX_TITLE];
+    char author[MAX_AUTHOR];
+    int  ISBN;
+    int  pubYear;
+    Boolean availability;
+
+    void (*init_book)(struct Book*);
+    void (*set_availability)(Boolean, struct Book*);
+    void (*info)(const struct Book*);
+    Boolean (*is_available)(const struct Book*);
 } Book;
-/**
- * @brief Initialise un livre et assigne ses méthodes.
- * @param book Pointeur vers le livre à initialiser.
- *
- * Cette fonction assigne les pointeurs de fonctions et met des valeurs par défaut.
- */
-void init(Book *book);
-/**
- * @brief Affiche les informations d'un livre.
- * @param book Pointeur vers le livre.
- */
-void book_info(Book *book);
-/**
- * @brief Définit la disponibilité d'un livre.
- * @param boolean Nouvelle valeur (True/False).
- * @param book Pointeur vers le livre.
- */
-void set_disp(Boolean boolean, Book *book);
-/**
- * @brief Vérifie et potentiellement affiche la disponibilité d'un livre.
- * @param book Pointeur vers le livre.
- */
-void get_available(Book *book);
-//-----------------------------------------------Stack----------------------------------------//
-/**
- * @struct StackElement
- * @brief Élément d'une pile pour l'historique des transactions.
- *
- * @var StackElement::book
- * Livre associé.
- *
- * @var StackElement::transaction
- * Type de transaction.
- *
- * @var StackElement::next
- * Pointeur vers l'élément suivant.
- *
- * @note Pile LIFO pour historique.
- */
-typedef struct StackElement {
-    Book book; /**< Livre de la transaction. */
-    Transaction transaction; /**< Type de transaction. */
-    struct StackElement *next; /**< Élément suivant. */
-} StackElement, *Stack;
-/**
- * @brief Vérifie si la pile est vide.
- * @param stack La pile.
- * @return True si vide, False sinon.
- */
-Boolean is_empty_stack(Stack stack);
-/**
- * @brief Crée une nouvelle pile vide.
- * @return Pointeur vers la pile vide (NULL).
- */
-Stack new_stack(void);
-/**
- * @brief Ajoute un élément au sommet de la pile.
- * @param stack Pile actuelle.
- * @param book Livre à ajouter.
- * @param transaction Type de transaction.
- * @return Nouvelle pile avec l'élément ajouté.
- *
- * @note Alloue de la mémoire ; gérer avec malloc.
- */
-Stack push_stack(Stack stack, Book *book, Transaction transaction);
-/**
- * @brief Vide la pile et libère la mémoire.
- * @param stack Pile à vider.
- * @return Pile vide (NULL).
- */
-Stack clear_stack(Stack stack);
-/**
- * @brief Retire l'élément du sommet.
- * @param stack Pile actuelle.
- * @return Pile sans le sommet.
- *
- * @note Libère la mémoire de l'élément retiré.
- */
-Stack pop_stack(Stack stack);
-/**
- * @brief Affiche le contenu de la pile.
- * @param stack La pile.
- */
-void print_stack(Stack stack);
-/**
- * @brief Vérifie si un ISBN est présent dans la pile.
- * @param stack La pile.
- * @param ISBN ISBN à chercher.
- * @return True si trouvé, False sinon.
- */
-Boolean contains(Stack stack, int ISBN);
-//---------------------------------------------SUSCRIBERS-------------------------------------//
-/**
- * @struct Subscriber
- * @brief Structure représentant un abonné.
- *
- * @var Subscriber::name
- * Prénom.
- *
- * @var Subscriber::surname
- * Nom de famille.
- *
- * @var Subscriber::id
- * ID unique.
- *
- * @var Subscriber::history
- * Historique des transactions (pile).
- *
- * @var Subscriber::init
- * Méthode d'initialisation.
- *
- * @var Subscriber::introduce_yourself
- * Méthode de présentation.
- *
- * @var Subscriber::borrow_book
- * Méthode d'emprunt.
- *
- * @var Subscriber::giveback_book
- * Méthode de retour.
- */
-typedef struct Subscriber Subscriber;
-/**
- * @typedef INIT
- * @brief Pointeur vers fonction d'initialisation d'abonné.
- * @param subscriber Pointeur vers l'abonné.
- */
-typedef void (*INIT)(Subscriber*);
-/**
- * @typedef INTRODUCE
- * @brief Pointeur vers fonction de présentation.
- * @param subscriber Pointeur vers l'abonné.
- */
-typedef void (*INTRODUCE)(Subscriber*);
-/**
- * @typedef BORROW
- * @brief Pointeur vers fonction d'emprunt.
- * @param subscriber Abonné.
- * @param book Livre.
- */
-typedef void (*BORROW)(Subscriber*, Book*);
-/**
- * @typedef GIVEBACK
- * @brief Pointeur vers fonction de retour.
- * @param subscriber Abonné.
- * @param book Livre.
- */
-typedef void (*GIVEBACK)(Subscriber*, Book*);
+
+/* -------- Abonné -------- */
+
 typedef struct Subscriber {
-    char name[15]; /**< Prénom. */
-    char surname[15]; /**< Nom de famille. */
-    int id; /**< ID unique. */
-    Stack history; /**< Historique. */
-    INIT init; /**< Initialisation. */
-    INTRODUCE introduce_yourself; /**< Présentation. */
-    BORROW borrow_book; /**< Emprunt. */
-    GIVEBACK giveback_book; /**< Retour. */
+    char name[MAX_NAME];
+    char surname[MAX_SURNAME];
+    int  id;
+    Stack history;
+
+    void (*introduce_yourself)(const struct Subscriber*);
+    Boolean (*borrow_book)(struct Subscriber*, Book*);
+    Boolean (*giveback_book)(struct Subscriber*, Book*);
 } Subscriber;
-/**
- * @brief Initialise un abonné.
- * @param subscriber Pointeur vers l'abonné.
- */
-void init_subscriber(Subscriber *subscriber);
-/**
- * @brief Présente l'abonné.
- * @param subscriber Pointeur vers l'abonné.
- */
-void introduce(Subscriber *subscriber);
-/**
- * @brief Gère l'emprunt d'un livre.
- * @param subscriber Abonné.
- * @param book Livre.
- *
- * @note Met à jour l'historique et la disponibilité.
- */
-void borrow(Subscriber *subscriber, Book *book);
-/**
- * @brief Gère le retour d'un livre.
- * @param subscriber Abonné.
- * @param book Livre.
- */
-void give_back(Subscriber *subscriber, Book *book);
-//---------------------------------------------BOOK_List----------------------------------------//
-/**
- * @struct BookList
- * @brief Élément d'une liste chaînée de livres.
- *
- * @var BookList::book
- * Livre stocké.
- *
- * @var BookList::next
- * Élément suivant.
- */
+
+/* -------- Pile -------- */
+
+struct StackElement {
+    Book book;
+    Transaction transaction;
+    StackElement* next;
+};
+
+/* -------- Liste de livres -------- */
+
 typedef struct BookList {
-    Book book; /**< Livre. */
-    struct BookList *next; /**< Suivant. */
+    Book book;
+    struct BookList* next;
 } BookList, *BList;
-/**
- * @brief Crée une nouvelle liste de livres vide.
- * @return Liste vide (NULL).
- */
-BList new_list_b();
-/**
- * @brief Vérifie si la liste est vide.
- * @param list La liste.
- * @return True si vide.
- */
-Boolean is_empty_list_b(BList list);
-/**
- * @brief Retourne la taille de la liste.
- * @param list La liste.
- * @return Nombre d'éléments.
- */
-int list_size_b(BList list);
-/**
- * @brief Affiche la liste de livres.
- * @param list La liste.
- */
-void print_list_b(BList list);
-/**
- * @brief Cherche un livre par ISBN.
- * @param list La liste.
- * @param ISBN ISBN à chercher.
- * @return True si trouvé.
- */
-Boolean searchBook_b(BList list, int ISBN);
-/**
- * @brief Ajoute un livre à la fin.
- * @param list Liste actuelle.
- * @param book Livre à ajouter.
- * @return Nouvelle liste.
- */
-BList add_last_b(BList list, Book *book);
-/**
- * @brief Ajoute un livre au début.
- * @param list Liste actuelle.
- * @param book Livre à ajouter.
- * @return Nouvelle liste.
- */
-BList add_first_b(BList list, Book *book);
-/**
- * @brief Retire le dernier élément.
- * @param list Liste actuelle.
- * @return Liste mise à jour.
- */
-BList remove_last_b(BList list);
-/**
- * @brief Retire le premier élément.
- * @param list Liste actuelle.
- * @return Liste mise à jour.
- */
-BList remove_first_b(BList list);
-/**
- * @brief Vide la liste et libère la mémoire.
- * @param list Liste à vider.
- */
-void clear_list_b(BList list);
-//-----------------------------------------SUBSLIST-----------------------------------------//
-/**
- * @struct SubsList
- * @brief Élément d'une liste chaînée d'abonnés.
- *
- * @var SubsList::subscriber
- * Abonné stocké.
- *
- * @var SubsList::next
- * Élément suivant.
- */
+
+/* -------- Liste d’abonnés -------- */
+
 typedef struct SubsList {
-    Subscriber subscriber; /**< Abonné. */
-    struct SubsList *next; /**< Suivant. */
+    Subscriber subscriber;
+    struct SubsList* next;
 } SubsList, *SList;
-/**
- * @brief Vérifie si la liste est vide.
- * @param list La liste.
- * @return True si vide.
- */
+
+/* ===================== PROTOTYPES ===================== */
+
+/* ---- Livres ---- */
+
+void     init_book(Book* book);
+void     book_info(const Book* book);
+void     set_avail(Boolean boolean, Book* book);
+Boolean is_available(const Book* book);
+
+/* ---- Abonnés ---- */
+
+void     init_subscriber(Subscriber* subscriber);
+void     introduce(const Subscriber* subscriber);
+Boolean borrow(Subscriber* subscriber, Book* book);
+Boolean give_back(Subscriber* subscriber, Book* book);
+
+/* ---- Pile ---- */
+
+Stack   new_stack(void);
+Boolean is_empty_stack(Stack stack);
+Stack   push_stack(Stack stack, const Book* book, Transaction transaction);
+Stack   pop_stack(Stack stack);
+Stack   clear_stack(Stack stack);
+void    print_stack(Stack stack);
+Boolean contains(Stack stack, int ISBN);
+
+/* ---- Liste des livres ---- */
+
+BList   new_list_b(void);
+Boolean is_empty_list_b(BList list);
+int     list_size_b(BList list);
+void    print_list_b(BList list);
+Boolean searchBook_b(BList list, int ISBN);
+BList   add_last_b(BList list, const Book* book);
+BList   add_first_b(BList list, const Book* book);
+BList   remove_last_b(BList list);
+BList   remove_first_b(BList list);
+void    clear_list_b(BList list);
+
+/* ---- Liste des abonnés ---- */
+
+SList   new_subList(void);
 Boolean is_empty_list(SList list);
-/**
- * @brief Crée une nouvelle liste d'abonnés vide.
- * @return Liste vide (NULL).
- */
-SList new_subList();
-/**
- * @brief Retourne la taille de la liste.
- * @param list La liste.
- * @return Nombre d'éléments.
- */
-int list_size(SList list);
-/**
- * @brief Affiche la liste d'abonnés.
- * @param list La liste.
- */
-void print_list(SList list);
-/**
- * @brief Cherche un abonné par ID.
- * @param list La liste.
- * @param id ID à chercher.
- * @return True si trouvé.
- */
+int     list_size(SList list);
+void    print_list(SList list);
 Boolean searchSubs(SList list, int id);
-/**
- * @brief Ajoute un abonné à la fin.
- * @param list Liste actuelle.
- * @param subscriber Abonné à ajouter.
- * @return Nouvelle liste.
- */
-SList add_last(SList list, Subscriber *subscriber);
-/**
- * @brief Ajoute un abonné au début.
- * @param list Liste actuelle.
- * @param subscriber Abonné à ajouter.
- * @return Nouvelle liste.
- */
-SList add_first(SList list, Subscriber *subscriber);
-/**
- * @brief Retire le dernier élément.
- * @param list Liste actuelle.
- * @return Liste mise à jour.
- */
-SList remove_last(SList list);
-/**
- * @brief Retire le premier élément.
- * @param list Liste actuelle.
- * @return Liste mise à jour.
- */
-SList remove_first(SList list);
-/**
- * @brief Vide la liste et libère la mémoire.
- * @param list Liste à vider.
- */
-void clear_list(SList list);
-#endif // __LIBRARY_H__
+SList   add_last(SList list, const Subscriber* subscriber);
+SList   add_first(SList list, const Subscriber* subscriber);
+SList   remove_last(SList list);
+SList   remove_first(SList list);
+void    clear_list(SList list);
+
+#endif /* LIBRARY_H */
