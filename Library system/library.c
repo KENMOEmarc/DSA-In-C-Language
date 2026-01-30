@@ -1,368 +1,354 @@
+#include "library.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "library.h"
-C// BOOK
-void init(Book *book) {
-    book->init_book         = init;
-    book->set_disponibility = set_disp;
-    book->info              = book_info;
-    book->is_available      = get_available;
 
-    char title[33] = {0};
-    char autor[15] = {0};
-    int isbn = 0;
-    int year = 0;
+// ===========================================
+// FONCTIONS POUR LES LIVRES
+// ===========================================
 
-    printf("Titre (max 32) : ");
-    scanf("%32s", title);
+void init_book(Book* book) {
+    book->set_availability = set_avail;
+    book->info = book_info;
+    book->is_available = is_available;
 
-    printf("Auteur (max 14) : ");
-    scanf("%14s", autor);
+    printf("Title (max %d chars): ", MAX_TITLE - 1);
+    scanf("%63s", book->title);
 
-    printf("ISBN : ");
-    scanf("%d", &isbn);
+    printf("Author (max %d chars): ", MAX_AUTHOR - 1);
+    scanf("%31s", book->author);
 
-    printf("Année : ");
-    scanf("%d", &year);
+    printf("ISBN: ");
+    scanf("%d", &book->ISBN);
 
-    strcpy(book->title, title);
-    strcpy(book->autor, autor);
-    book->ISBN          = isbn;
-    book->pubYear       = year;
-    book->disponibility = True;
+    printf("Publication year: ");
+    scanf("%d", &book->pubYear);
+
+    book->availability = True;
 }
-void book_info(Book *book){
-    printf("|| Title : %s , Autor : %s , ISBN : %d , Pub year : %d , Disponibility :", book -> title, book -> autor, book -> ISBN, book -> pubYear);
-    if (book -> disponibility == True){
-        printf("Available ! \n");
-    }else{
-        printf("Unavailable ! \n");
-    }
+
+void book_info(const Book* book) {
+    printf("|| Title: %s | Author: %s | ISBN: %d | Year: %d | Status: %s ||\n",
+           book->title,
+           book->author,
+           book->ISBN,
+           book->pubYear,
+           book->availability ? "Available" : "Unavailable");
 }
-void set_disp(Boolean boolean, Book *book){
-    book -> disponibility = boolean;
+
+void set_avail(Boolean boolean, Book* book) {
+    book->availability = boolean;
 }
-void get_available(Book *book){
-    printf("%s ", (book -> disponibility) ? "Available !\n" : "Unavaible !\n");
+
+Boolean is_available(const Book* book) {
+    return book->availability;
 }
-// SUBSCRIBER
-void init_subscriber(Subscriber *subscriber) {
+
+// ===========================================
+// FONCTIONS POUR LES ABONNÉS
+// ===========================================
+
+void init_subscriber(Subscriber* subscriber) {
     subscriber->introduce_yourself = introduce;
-    subscriber->borrow_book        = borrow;
-    subscriber->giveback_book      = give_back;
+    subscriber->borrow_book = borrow;
+    subscriber->giveback_book = give_back;
 
-    char name[15]    = {0};
-    char surname[15] = {0};
-    int id = 0;
+    printf("First name (max %d chars): ", MAX_NAME - 1);
+    scanf("%31s", subscriber->name);
 
-    printf("Prénom (max 14) : ");
-    scanf("%14s", name);
+    printf("Last name (max %d chars): ", MAX_SURNAME - 1);
+    scanf("%31s", subscriber->surname);
 
-    printf("Nom (max 14) : ");
-    scanf("%14s", surname);
+    printf("ID: ");
+    scanf("%d", &subscriber->id);
 
-    printf("ID : ");
-    scanf("%d", &id);
-
-    strcpy(subscriber->name,    name);
-    strcpy(subscriber->surname, surname);
-    subscriber->id      = id;
     subscriber->history = new_stack();
 }
-void introduce(Subscriber *subscriber){
-    printf("Name : %s , Surname : %s , id : %d \n ", subscriber -> name, subscriber -> surname, subscriber -> id);
-    printf("History of %s : \n", subscriber -> name);
-    print_stack(subscriber -> history);
-}
-void borrow(Subscriber *subscriber, Book *book){
-    if (book -> disponibility == True){
-        book -> set_disponibility(False, book);
-        subscriber -> history = push_stack(subscriber -> history, book, borrow);
-    } else {
-        printf("This book is unavailable !\n");
-    }
-}
-void give_back(Subscriber *subscriber, Book *book){
-    if (book -> disponibility == False){
-        book -> set_disponibility(True, book);
-        subscriber -> history = push_stack(subscriber -> history, book, revert);
-    } else {
-        printf("This book is already present in the library !\n");
-    }
-}
-//----------------------------------------------STACK_HISTORY--------------------------------------//
-Stack new_stack(void){
-    return NULL;
-}
-Boolean is_empty_stack(Stack stack){
-    if(stack == NULL)
-        return True;
-    return False;
-}
-Stack push_stack(Stack stack, Book *book, Transaction transaction){
-    StackElement *element = NULL;
-    element = malloc(sizeof(*element));
-    if(element == NULL){
-        fprintf(stderr, "Erreur d'allocation dynamique . \n'");
-        exit(EXIT_FAILURE);
-    }
-    element -> book = *book;
-    element -> transaction = transaction;
-    element -> next = stack;
-    return element;
-}
-Stack pop_stack(Stack stack){
-    StackElement *element = NULL;
-    if(is_empty_stack(stack) == True)
-        return new_stack();
-    element = stack -> next;
-    free(stack);
-    return element;
-}
-Stack clear_stack(Stack stack){
-    return clear_stack(pop_stack(stack));
-}
-void print_stack(Stack stack){
-    if(is_empty_stack(stack) == True){
-        printf("\n Nothing to print \n");
-        return;
-    }
-    while(!is_empty_stack(stack)){
-        stack -> book.info(&stack -> book);
-        printf("%s ", (stack -> transaction == borrow) ? "Borrow ||\n" : "Revert ||\n");
-        stack = stack -> next;
-    }
-}
-Boolean contains( Stack stack, int ISBN){
-    if(is_empty_stack(stack) == True){
-        printf("\n Empty ! \n");
-        return False;
-    }
-    while(!is_empty_stack(stack)){
-        if (stack -> book.ISBN == ISBN){
-            return True;
-        }
-        stack = stack -> next;
-    }
-    return False;
-}
-//--------------------------------------------BOOKSList-------------------------------------------//
-BList new_list_b(){
-    return NULL;
-}
-Boolean is_empty_list_b(BList list){
-    if (list == NULL)
-        return True;
-    return False;
-}
-int list_size_b(BList list){
-    int size = 0;
-    if(!is_empty_list_b(list)){
-        while (list != NULL){
-            ++size;
-            list = list -> next;
-        }
-    }
-    return size;
-}
-void print_list_b(BList list){
-    if(is_empty_list_b(list) == True){
-        printf("\n Neither book, Empty list ! \n");
-        return;
-    }
-    while (list != NULL) {
-        list -> book.info(&list -> book);
-        list = list -> next;
-    }
-}
-Boolean searchBook_b(BList list, int ISBN){
-    if(is_empty_list_b(list) == True){
-        printf("\n Empty list ! \n");
-        return False;
-    }
-    while(!is_empty_list_b(list)){
-        if (list -> book.ISBN == ISBN){
-            return True;
-        }
-        list = list -> next;
-    }
-    return False;
-}
-BList add_last_b(BList list, Book *book){
-    BookList *element = NULL;
-    element = malloc(sizeof(*element));
-    if(element == NULL){
-        fprintf(stderr, "Erreur d'allocation dynamique .\n") ;
-        exit(EXIT_FAILURE);
-    }
-    if (searchBook_b(list, book -> ISBN) == True){
-        printf("This element already exist in the SList!\n ");
-        return list;
-    }
-    element -> book = *book;
-    element -> next = NULL;
-    if (is_empty_list_b(list) == True)
-        return element;
-    BookList *temp = list;
-    while (temp -> next != NULL){
-        temp = temp -> next;
-    }
-    temp -> next = element;
-    return list;
-}
-BList add_first_b(BList list, Book *book){
-    BookList *element = NULL;
-    element = malloc(sizeof(*element));
-    if(element == NULL){
-        fprintf(stderr, "Erreur d'allocation dynamique .\n") ;
-        exit(EXIT_FAILURE);
-    }
-    if (searchBook_b(list, book -> ISBN) == True){
-        printf("This element already exist in the list!\n ");
-        return list;
-    }
-    element -> book = *book;
-    if (is_empty_list_b(list) == True)
-        element -> next = NULL;
-    element -> next = list;
-    return element;
-}
-BList remove_last_b(BList list){
-    if (is_empty_list_b(list) == True)
-        return new_list_b();
-    if (list -> next == NULL){
-        free(list);
-        return new_list_b();
-    }
-    BookList *nodes = list;
-    BookList *temp = list;
-    while (temp -> next != NULL){
-        nodes = temp;
-        temp = temp -> next;
-    }
-    nodes -> next = NULL;
-    free(temp);
-    return list;
-}
-BList remove_first_b(BList list){
-    if (is_empty_list_b(list) == True)
-        return new_list_b();
-    BookList *element = list -> next;
-    free(list);
-    return element;
-}
-void clear_list_b(BList list){
-    while (list != NULL)
-        list = remove_first_b(list);
-}
-//--------------------------------------------SUBSList-------------------------------------------//
-SList new_subList(){
-    return NULL;
-}
-Boolean is_empty_list(SList list){
-    if (list == NULL)
-        return True;
-    return False;
-}
-int list_size(SList list){
-    int size = 0;
-    if(!is_empty_list(list)){
-        while (list != NULL){
-            ++size;
-            list = list -> next;
-        }
-    }
-    return size;
-}
-void print_list(SList list){
-    if(is_empty_list(list) == True){
-        printf("\n There is Nothing to print, Neither subscriber ! \n");
-        return;
-    }
-    while (list != NULL) {
-        list -> subscriber.introduce_yourself(&list -> subscriber);
-        list = list -> next;
-    }
-}
-Boolean searchSubs(SList list, int id){
-    if(is_empty_list(list) == True){
-        printf("\n Empty list ! \n");
-        return False;
-    }
-    while(!is_empty_list(list)){
-        if (list -> subscriber.id == id){
-            return True;
-        }
-        list = list -> next;
-    }
-    return False;
-}
-SList add_last(SList list, Subscriber *subscriber){
-    SubsList *element = NULL;
-    element = malloc(sizeof(*element));
-    if(element == NULL){
-        fprintf(stderr, "Erreur d'allocation dynamique .\n") ;
-        exit(EXIT_FAILURE);
-    }
-    if (searchSubs(list, subscriber -> id) == True){
-        printf("This element already exist in the SList!\n ");
-        return list;
-    }
-    element -> subscriber = *subscriber;
-    element -> next = NULL;
-    if (is_empty_list(list) == True)
-        return element;
-    SubsList *temp = list;
-    while (temp -> next != NULL){
-        temp = temp -> next;
-    }
-    temp -> next = element;
-    return list;
-}
-SList add_first(SList list, Subscriber *subscriber){
-    SubsList *element = NULL;
-    element = malloc(sizeof(*element));
-    if(element == NULL){
-        fprintf(stderr, "Erreur d'allocation dynamique .\n") ;
-        exit(EXIT_FAILURE);
-    }
-    if (searchSubs(list, subscriber -> id) == True){
-        printf("This element already exist in the SList!\n ");
-        return list;
-    }
-    element -> subscriber = *subscriber;
-    if (is_empty_list(list) == True)
-        element -> next = NULL;
-    element -> next = list;
-    return element;
-}
-SList remove_last(SList list){
-    if (is_empty_list(list) == True)
-        return new_subList();
-    if (list -> next == NULL){
-        free(list);
-        return new_subList();
-    }
-    SubsList *nodes = list;
-    SubsList *temp = list;
-    while (temp -> next != NULL){
-        nodes = temp;
-        temp = temp -> next;
-    }
-    nodes -> next = NULL;
-    free(temp);
-    return list;
-}
-SList remove_first(SList list){
-    if (is_empty_list(list) == True)
-        return new_subList();
-    SubsList *element = list -> next;
-    free(list);
-    return element;
-}
-void clear_list(SList list){
-    while (list != NULL)
-        list = remove_first(list);
+
+void introduce(const Subscriber* subscriber) {
+    printf("Name: %s %s | ID: %d\n",
+           subscriber->name,
+           subscriber->surname,
+           subscriber->id);
+
+    printf("History:\n");
+    print_stack(subscriber->history);
 }
 
+Boolean borrow(Subscriber* subscriber, Book* book) {
+    if (!book->availability) {
+        printf("Book not available!\n");
+        return False;
+    }
+
+    book->availability = False;
+    subscriber->history = push_stack(subscriber->history, book, Borrow);
+    printf("Book borrowed successfully.\n");
+    return True;
+}
+
+Boolean give_back(Subscriber* subscriber, Book* book) {
+    if (book->availability) {
+        printf("Book already in library!\n");
+        return False;
+    }
+
+    book->availability = True;
+    subscriber->history = push_stack(subscriber->history, book, Revert);
+    printf("Book returned successfully.\n");
+    return True;
+}
+
+// ===========================================
+// FONCTIONS POUR LA PILE
+// ===========================================
+
+Stack new_stack(void) {
+    return NULL;
+}
+
+Boolean is_empty_stack(Stack stack) {
+    return stack == NULL ? True : False;
+}
+
+Stack push_stack(Stack stack, const Book* book, Transaction transaction) {
+    StackElement* element = malloc(sizeof(StackElement));
+    if (!element) {
+        fprintf(stderr, "Stack allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    element->book = *book;
+    element->transaction = transaction;
+    element->next = stack;
+    return element;
+}
+
+Stack pop_stack(Stack stack) {
+    if (is_empty_stack(stack)) return NULL;
+
+    Stack next = stack->next;
+    free(stack);
+    return next;
+}
+
+Stack clear_stack(Stack stack) {
+    while (stack) {
+        stack = pop_stack(stack);
+    }
+    return NULL;
+}
+
+void print_stack(Stack stack) {
+    if (is_empty_stack(stack)) {
+        printf("No history.\n");
+        return;
+    }
+
+    while (stack) {
+        stack->book.info(&stack->book);
+        printf("Transaction: %s\n",
+               stack->transaction == Borrow ? "Borrow" : "Return");
+        stack = stack->next;
+    }
+}
+
+Boolean contains(Stack stack, int ISBN) {
+    while (stack) {
+        if (stack->book.ISBN == ISBN) return True;
+        stack = stack->next;
+    }
+    return False;
+}
+
+// ===========================================
+// FONCTIONS POUR LA LISTE DE LIVRES
+// ===========================================
+
+BList new_list_b(void) { return NULL; }
+
+Boolean is_empty_list_b(BList list) { return list == NULL ? True : False; }
+
+int list_size_b(BList list) {
+    int size = 0;
+    while (list) {
+        size++;
+        list = list->next;
+    }
+    return size;
+}
+
+void print_list_b(BList list) {
+    if (is_empty_list_b(list)) {
+        printf("No books in list.\n");
+        return;
+    }
+
+    printf("=== Book list (%d) ===\n", list_size_b(list));
+    while (list) {
+        list->book.info(&list->book);
+        list = list->next;
+    }
+}
+
+Boolean searchBook_b(BList list, int ISBN) {
+    while (list) {
+        if (list->book.ISBN == ISBN) return True;
+        list = list->next;
+    }
+    return False;
+}
+
+BList add_last_b(BList list, const Book* book) {
+    if (searchBook_b(list, book->ISBN)) return list;
+
+    BookList* node = malloc(sizeof(BookList));
+    if (!node) exit(EXIT_FAILURE);
+
+    node->book = *book;
+    node->next = NULL;
+
+    if (!list) return node;
+
+    BList cur = list;
+    while (cur->next) cur = cur->next;
+    cur->next = node;
+    return list;
+}
+
+BList add_first_b(BList list, const Book* book) {
+    if (searchBook_b(list, book->ISBN)) return list;
+
+    BookList* node = malloc(sizeof(BookList));
+    if (!node) exit(EXIT_FAILURE);
+
+    node->book = *book;
+    node->next = list;
+    return node;
+}
+
+BList remove_last_b(BList list) {
+    if (!list) return NULL;
+
+    if (!list->next) {
+        free(list);
+        return NULL;
+    }
+
+    BList prev = list;
+    BList cur = list->next;
+    while (cur->next) {
+        prev = cur;
+        cur = cur->next;
+    }
+    prev->next = NULL;
+    free(cur);
+    return list;
+}
+
+BList remove_first_b(BList list) {
+    if (!list) return NULL;
+    BList next = list->next;
+    free(list);
+    return next;
+}
+
+void clear_list_b(BList list) {
+    while (list) list = remove_first_b(list);
+}
+
+// ===========================================
+// FONCTIONS POUR LA LISTE D'ABONNÉS
+// ===========================================
+
+SList new_subList(void) { return NULL; }
+
+Boolean is_empty_list(SList list) { return list == NULL ? True : False; }
+
+int list_size(SList list) {
+    int size = 0;
+    while (list) {
+        size++;
+        list = list->next;
+    }
+    return size;
+}
+
+void print_list(SList list) {
+    if (is_empty_list(list)) {
+        printf("No subscribers.\n");
+        return;
+    }
+
+    printf("=== Subscriber list (%d) ===\n", list_size(list));
+    while (list) {
+        list->subscriber.introduce_yourself(&list->subscriber);
+        list = list->next;
+    }
+}
+
+Boolean searchSubs(SList list, int id) {
+    while (list) {
+        if (list->subscriber.id == id) return True;
+        list = list->next;
+    }
+    return False;
+}
+
+SList add_last(SList list, const Subscriber* subscriber) {
+    if (searchSubs(list, subscriber->id)) return list;
+
+    SubsList* node = malloc(sizeof(SubsList));
+    if (!node) exit(EXIT_FAILURE);
+
+    node->subscriber = *subscriber;
+    node->next = NULL;
+
+    if (!list) return node;
+
+    SList cur = list;
+    while (cur->next) cur = cur->next;
+    cur->next = node;
+    return list;
+}
+
+SList add_first(SList list, const Subscriber* subscriber) {
+    if (searchSubs(list, subscriber->id)) return list;
+
+    SubsList* node = malloc(sizeof(SubsList));
+    if (!node) exit(EXIT_FAILURE);
+
+    node->subscriber = *subscriber;
+    node->next = list;
+    return node;
+}
+
+SList remove_last(SList list) {
+    if (!list) return NULL;
+
+    if (!list->next) {
+        free(list);
+        return NULL;
+    }
+
+    SList prev = list;
+    SList cur = list->next;
+    while (cur->next) {
+        prev = cur;
+        cur = cur->next;
+    }
+    prev->next = NULL;
+    free(cur);
+    return list;
+}
+
+SList remove_first(SList list) {
+    if (!list) return NULL;
+    SList next = list->next;
+    free(list);
+    return next;
+}
+
+void clear_list(SList list) {
+    while (list) list = remove_first(list);
+}
