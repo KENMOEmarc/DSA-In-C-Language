@@ -3,634 +3,430 @@
 #include <string.h>
 #include "library.h"
 
-// Variables globales pour stocker les listes
-BList bibliotheque = NULL;
-SList abonnes = NULL;
+// Variables globales
+BList library = NULL;
+SList subscribers = NULL;
 
-void afficher_menu_principal();
-void gerer_livres();
-void gerer_abonnes();
-void gerer_emprunts();
-void ajouter_livre();
-void afficher_livres();
-void rechercher_livre();
-void supprimer_livre();
-void ajouter_abonne();
-void afficher_abonnes();
-void rechercher_abonne();
-void supprimer_abonne();
-void emprunter_livre();
-void retourner_livre();
-void afficher_historique_abonne();
-void tester_pile();
-void vider_buffer();
+// Prototypes
+void display_menu(void);
+void add_book(void);
+void display_books(void);
+void add_subscriber(void);
+void display_subscribers(void);
+void borrow_book(void);
+void return_book(void);
+void clear_buffer(void);
+void search_book_by_isbn(void);
+void search_subscriber_by_id(void);
+void display_subscriber_history(void);
 
-int main() {
-    printf("=========================================\n");
-    printf("   SYSTEME DE GESTION DE BIBLIOTHEQUE\n");
-    printf("=========================================\n");
-    
+int main(void) {
+    printf("=============================\n");
+    printf("   LIBRARY MANAGEMENT SYSTEM\n");
+    printf("=============================\n");
+
     // Initialisation des listes
-    bibliotheque = new_list_b();
-    abonnes = new_subList();
-    
-    afficher_menu_principal();
-    
-    // Nettoyage avant de quitter
-    clear_list_b(bibliotheque);
-    clear_list(abonnes);
-    
+    library = new_list_b();
+    subscribers = new_subList();
+
+    display_menu();
+
+    // Nettoyage
+    clear_list_b(library);
+    clear_list(subscribers);
+
     return 0;
 }
 
-void afficher_menu_principal() {
-    int choix;
-    
+void display_menu(void) {
+    int choice;
+
     do {
-        printf("\n========== MENU PRINCIPAL ==========\n");
-        printf("1.  Gérer les livres\n");
-        printf("2.  Gérer les abonnés\n");
-        printf("3.  Emprunter un livre\n");
-        printf("4.  Retourner un livre\n");
-        printf("5.  Afficher l'historique d'un abonné\n");
-        printf("6.  Tester les fonctions de pile\n");
-        printf("7.  Afficher tous les livres\n");
-        printf("8.  Afficher tous les abonnés\n");
-        printf("9.  Vider les listes (reset)\n");
-        printf("0.  Quitter\n");
-        printf("===================================\n");
-        printf("Votre choix : ");
-        scanf("%d", &choix);
-        vider_buffer();
-        
-        switch(choix) {
-            case 1: gerer_livres(); break;
-            case 2: gerer_abonnes(); break;
-            case 3: emprunter_livre(); break;
-            case 4: retourner_livre(); break;
-            case 5: afficher_historique_abonne(); break;
-            case 6: tester_pile(); break;
-            case 7: afficher_livres(); break;
-            case 8: afficher_abonnes(); break;
-            case 9:
-                clear_list_b(bibliotheque);
-                clear_list(abonnes);
-                bibliotheque = new_list_b();
-                abonnes = new_subList();
-                printf("✓ Listes vidées avec succès !\n");
-                break;
-            case 0:
-                printf("Au revoir !\n");
-                break;
-            default:
-                printf("Choix invalide. Veuillez réessayer.\n");
+        printf("\n========= MAIN MENU =========\n");
+        printf("1. Add a book\n");
+        printf("2. Display all books\n");
+        printf("3. Add a subscriber\n");
+        printf("4. Display all subscribers\n");
+        printf("5. Borrow a book\n");
+        printf("6. Return a book\n");
+        printf("7. Search for a book by ISBN\n");
+        printf("8. Search for a subscriber by ID\n");
+        printf("9. Display subscriber history\n");
+        printf("0. Exit\n");
+        printf("=============================\n");
+        printf("Your choice: ");
+
+        if (scanf("%d", &choice) != 1) {
+            printf("Invalid input!\n");
+            clear_buffer();
+            continue;
         }
-    } while(choix != 0);
-}
+        clear_buffer();
 
-void gerer_livres() {
-    int choix;
-    
-    do {
-        printf("\n--------- GESTION DES LIVRES ---------\n");
-        printf("1. Ajouter un nouveau livre\n");
-        printf("2. Afficher tous les livres\n");
-        printf("3. Rechercher un livre par ISBN\n");
-        printf("4. Supprimer un livre\n");
-        printf("5. Nombre de livres dans la bibliothèque\n");
-        printf("0. Retour au menu principal\n");
-        printf("-------------------------------------\n");
-        printf("Votre choix : ");
-        scanf("%d", &choix);
-        vider_buffer();
-        
-        switch(choix) {
-            case 1: ajouter_livre(); break;
-            case 2: afficher_livres(); break;
-            case 3: rechercher_livre(); break;
-            case 4: supprimer_livre(); break;
-            case 5:
-                printf("Nombre de livres : %d\n", list_size_b(bibliotheque));
-                break;
-            case 0: break;
-            default: printf("Choix invalide.\n");
+        switch(choice) {
+            case 1: add_book(); break;
+            case 2: display_books(); break;
+            case 3: add_subscriber(); break;
+            case 4: display_subscribers(); break;
+            case 5: borrow_book(); break;
+            case 6: return_book(); break;
+            case 7: search_book_by_isbn(); break;
+            case 8: search_subscriber_by_id(); break;
+            case 9: display_subscriber_history(); break;
+            case 0: printf("Goodbye!\n"); break;
+            default: printf("Invalid choice!\n");
         }
-    } while(choix != 0);
+    } while(choice != 0);
 }
 
-void gerer_abonnes() {
-    int choix;
-    
-    do {
-        printf("\n-------- GESTION DES ABONNES --------\n");
-        printf("1. Ajouter un nouvel abonné\n");
-        printf("2. Afficher tous les abonnés\n");
-        printf("3. Rechercher un abonné par ID\n");
-        printf("4. Supprimer un abonné\n");
-        printf("5. Nombre d'abonnés\n");
-        printf("0. Retour au menu principal\n");
-        printf("-------------------------------------\n");
-        printf("Votre choix : ");
-        scanf("%d", &choix);
-        vider_buffer();
-        
-        switch(choix) {
-            case 1: ajouter_abonne(); break;
-            case 2: afficher_abonnes(); break;
-            case 3: rechercher_abonne(); break;
-            case 4: supprimer_abonne(); break;
-            case 5:
-                printf("Nombre d'abonnés : %d\n", list_size(abonnes));
-                break;
-            case 0: break;
-            default: printf("Choix invalide.\n");
-        }
-    } while(choix != 0);
+void add_book(void) {
+    printf("\n--- ADD A NEW BOOK ---\n");
+
+    // Création d'un livre
+    Book new_book;
+
+    // Initialisation
+    init_book(&new_book);
+
+    // Ajout à la liste
+    library = add_last_b(library, &new_book);
+    printf("Book added successfully!\n");
 }
 
-void ajouter_livre() {
-    printf("\n--- AJOUT D'UN NOUVEAU LIVRE ---\n");
-    
-    // Création dynamique d'un livre
-    Book *nouveauLivre = malloc(sizeof(Book));
-    if (nouveauLivre == NULL) {
-        printf("Erreur d'allocation mémoire !\n");
+void display_books(void) {
+    printf("\n--- ALL BOOKS ---\n");
+    if (is_empty_list_b(library)) {
+        printf("No books in the library.\n");
+    } else {
+        print_list_b(library);
+    }
+}
+
+void add_subscriber(void) {
+    printf("\n--- ADD A NEW SUBSCRIBER ---\n");
+
+    // Création d'un abonné
+    Subscriber new_subscriber;
+
+    // Initialisation
+    init_subscriber(&new_subscriber);
+
+    // Ajout à la liste
+    subscribers = add_last(subscribers, &new_subscriber);
+    printf("Subscriber added successfully!\n");
+}
+
+void display_subscribers(void) {
+    printf("\n--- ALL SUBSCRIBERS ---\n");
+    if (is_empty_list(subscribers)) {
+        printf("No subscribers registered.\n");
+    } else {
+        print_list(subscribers);
+    }
+}
+
+void borrow_book(void) {
+    printf("\n--- BORROW A BOOK ---\n");
+
+    if (is_empty_list_b(library)) {
+        printf("No books available.\n");
         return;
     }
-    
-    // Initialisation via la fonction init
-    nouveauLivre->init_book(nouveauLivre);
-    
-    // Demander où ajouter
-    printf("\nOù voulez-vous ajouter le livre ?\n");
-    printf("1. Au début de la liste\n");
-    printf("2. À la fin de la liste\n");
-    printf("Votre choix : ");
-    int position;
-    scanf("%d", &position);
-    vider_buffer();
-    
-    if (position == 1) {
-        bibliotheque = add_first_b(bibliotheque, nouveauLivre);
-        printf("✓ Livre ajouté au début de la liste.\n");
-    } else if (position == 2) {
-        bibliotheque = add_last_b(bibliotheque, nouveauLivre);
-        printf("✓ Livre ajouté à la fin de la liste.\n");
-    } else {
-        printf("Position invalide. Livre non ajouté.\n");
-    }
-    
-    // Ne pas free le livre car il est référencé dans la liste
-}
 
-void afficher_livres() {
-    printf("\n--- LISTE DES LIVRES ---\n");
-    if (is_empty_list_b(bibliotheque)) {
-        printf("Aucun livre dans la bibliothèque.\n");
-    } else {
-        print_list_b(bibliotheque);
-    }
-}
-
-void rechercher_livre() {
-    printf("\n--- RECHERCHE D'UN LIVRE ---\n");
-    if (is_empty_list_b(bibliotheque)) {
-        printf("La bibliothèque est vide.\n");
+    if (is_empty_list(subscribers)) {
+        printf("No subscribers available.\n");
         return;
     }
-    
-    int isbn;
-    printf("Entrez l'ISBN du livre à rechercher : ");
-    scanf("%d", &isbn);
-    vider_buffer();
-    
-    if (searchBook_b(bibliotheque, isbn)) {
-        printf("✓ Le livre avec ISBN %d est présent dans la bibliothèque.\n", isbn);
-    } else {
-        printf("✗ Aucun livre trouvé avec l'ISBN %d.\n", isbn);
-    }
-}
 
-void supprimer_livre() {
-    printf("\n--- SUPPRESSION D'UN LIVRE ---\n");
-    if (is_empty_list_b(bibliotheque)) {
-        printf("La bibliothèque est vide.\n");
-        return;
-    }
-    
-    printf("Comment voulez-vous supprimer ?\n");
-    printf("1. Supprimer le premier livre\n");
-    printf("2. Supprimer le dernier livre\n");
-    printf("Votre choix : ");
-    int choix;
-    scanf("%d", &choix);
-    vider_buffer();
-    
-    if (choix == 1) {
-        bibliotheque = remove_first_b(bibliotheque);
-        printf("✓ Premier livre supprimé.\n");
-    } else if (choix == 2) {
-        bibliotheque = remove_last_b(bibliotheque);
-        printf("✓ Dernier livre supprimé.\n");
-    } else {
-        printf("Choix invalide.\n");
-    }
-}
-
-void ajouter_abonne() {
-    printf("\n--- AJOUT D'UN NOUVEL ABONNE ---\n");
-    
-    // Création dynamique d'un abonné
-    Subscriber *nouvelAbonne = malloc(sizeof(Subscriber));
-    if (nouvelAbonne == NULL) {
-        printf("Erreur d'allocation mémoire !\n");
-        return;
-    }
-    
-    // Initialisation via la fonction init_subscriber
-    init_subscriber(nouvelAbonne);
-    
-    // Demander où ajouter
-    printf("\nOù voulez-vous ajouter l'abonné ?\n");
-    printf("1. Au début de la liste\n");
-    printf("2. À la fin de la liste\n");
-    printf("Votre choix : ");
-    int position;
-    scanf("%d", &position);
-    vider_buffer();
-    
-    if (position == 1) {
-        abonnes = add_first(abonnes, nouvelAbonne);
-        printf("✓ Abonné ajouté au début de la liste.\n");
-    } else if (position == 2) {
-        abonnes = add_last(abonnes, nouvelAbonne);
-        printf("✓ Abonné ajouté à la fin de la liste.\n");
-    } else {
-        printf("Position invalide. Abonné non ajouté.\n");
-    }
-}
-
-void afficher_abonnes() {
-    printf("\n--- LISTE DES ABONNES ---\n");
-    if (is_empty_list(abonnes)) {
-        printf("Aucun abonné enregistré.\n");
-    } else {
-        print_list(abonnes);
-    }
-}
-
-void rechercher_abonne() {
-    printf("\n--- RECHERCHE D'UN ABONNE ---\n");
-    if (is_empty_list(abonnes)) {
-        printf("Aucun abonné enregistré.\n");
-        return;
-    }
-    
-    int id;
-    printf("Entrez l'ID de l'abonné à rechercher : ");
-    scanf("%d", &id);
-    vider_buffer();
-    
-    if (searchSubs(abonnes, id)) {
-        printf("✓ L'abonné avec ID %d est présent.\n", id);
-    } else {
-        printf("✗ Aucun abonné trouvé avec l'ID %d.\n", id);
-    }
-}
-
-void supprimer_abonne() {
-    printf("\n--- SUPPRESSION D'UN ABONNE ---\n");
-    if (is_empty_list(abonnes)) {
-        printf("Aucun abonné enregistré.\n");
-        return;
-    }
-    
-    printf("Comment voulez-vous supprimer ?\n");
-    printf("1. Supprimer le premier abonné\n");
-    printf("2. Supprimer le dernier abonné\n");
-    printf("Votre choix : ");
-    int choix;
-    scanf("%d", &choix);
-    vider_buffer();
-    
-    if (choix == 1) {
-        abonnes = remove_first(abonnes);
-        printf("✓ Premier abonné supprimé.\n");
-    } else if (choix == 2) {
-        abonnes = remove_last(abonnes);
-        printf("✓ Dernier abonné supprimé.\n");
-    } else {
-        printf("Choix invalide.\n");
-    }
-}
-
-void emprunter_livre() {
-    printf("\n--- EMPRUNT D'UN LIVRE ---\n");
-    
-    if (is_empty_list_b(bibliotheque)) {
-        printf("Aucun livre disponible dans la bibliothèque.\n");
-        return;
-    }
-    
-    if (is_empty_list(abonnes)) {
-        printf("Aucun abonné enregistré.\n");
-        return;
-    }
-    
     // Afficher les livres disponibles
-    printf("Livres disponibles :\n");
-    BList temp = bibliotheque;
-    int i = 1;
-    while (temp != NULL) {
-        if (temp->book.disponibility == True) {
-            printf("%d. ", i);
-            temp->book.info(&temp->book);
+    printf("Available books:\n");
+    BList temp_book = library;
+    int book_count = 0;
+    int available_book[100]; // Tableau pour stocker les indices des livres disponibles
+    int book_index = 0;
+
+    while (temp_book != NULL) {
+        if (temp_book->book.availability == True) {
+            printf("%d. ", ++book_count);
+            temp_book->book.info(&temp_book->book);
+            available_book[book_index++] = book_count;
         }
-        temp = temp->next;
-        i++;
+        temp_book = temp_book->next;
     }
-    
+
+    if (book_count == 0) {
+        printf("No books available for borrowing.\n");
+        return;
+    }
+
     // Afficher les abonnés
-    printf("\nAbonnés disponibles :\n");
-    SList tempA = abonnes;
-    i = 1;
-    while (tempA != NULL) {
-        printf("%d. ", i);
-        tempA->subscriber.introduce_yourself(&tempA->subscriber);
-        tempA = tempA->next;
-        i++;
+    printf("\nAvailable subscribers:\n");
+    SList temp_sub = subscribers;
+    int sub_count = 0;
+    while (temp_sub != NULL) {
+        printf("%d. %s %s (ID: %d)\n", ++sub_count,
+               temp_sub->subscriber.name,
+               temp_sub->subscriber.surname,
+               temp_sub->subscriber.id);
+        temp_sub = temp_sub->next;
     }
-    
-    int choixLivre, choixAbonne;
-    printf("\nNuméro du livre à emprunter : ");
-    scanf("%d", &choixLivre);
-    printf("Numéro de l'abonné : ");
-    scanf("%d", &choixAbonne);
-    vider_buffer();
-    
+
+    int book_choice, sub_choice;
+    printf("\nSelect book number: ");
+    if (scanf("%d", &book_choice) != 1) {
+        printf("Invalid input!\n");
+        clear_buffer();
+        return;
+    }
+
+    printf("Select subscriber number: ");
+    if (scanf("%d", &sub_choice) != 1) {
+        printf("Invalid input!\n");
+        clear_buffer();
+        return;
+    }
+    clear_buffer();
+
+    // Vérifier si le choix du livre est valide
+    if (book_choice < 1 || book_choice > book_count) {
+        printf("Invalid book selection!\n");
+        return;
+    }
+
+    // Vérifier si le choix de l'abonné est valide
+    if (sub_choice < 1 || sub_choice > sub_count) {
+        printf("Invalid subscriber selection!\n");
+        return;
+    }
+
     // Trouver le livre sélectionné
-    BList livreSelect = bibliotheque;
-    int compteur = 1;
-    while (livreSelect != NULL && compteur < choixLivre) {
-        livreSelect = livreSelect->next;
-        compteur++;
+    BList selected_book = library;
+    int current_book = 0;
+    while (selected_book != NULL) {
+        if (selected_book->book.availability == True) {
+            current_book++;
+            if (current_book == book_choice) break;
+        }
+        selected_book = selected_book->next;
     }
-    
+
     // Trouver l'abonné sélectionné
-    SList abonneSelect = abonnes;
-    compteur = 1;
-    while (abonneSelect != NULL && compteur < choixAbonne) {
-        abonneSelect = abonneSelect->next;
-        compteur++;
+    SList selected_sub = subscribers;
+    int current_sub = 0;
+    while (selected_sub != NULL) {
+        current_sub++;
+        if (current_sub == sub_choice) break;
+        selected_sub = selected_sub->next;
     }
-    
-    if (livreSelect != NULL && abonneSelect != NULL) {
-        abonneSelect->subscriber.borrow_book(&abonneSelect->subscriber, &livreSelect->book);
-        printf("✓ Opération d'emprunt effectuée.\n");
+
+    if (selected_book != NULL && selected_sub != NULL) {
+        selected_sub->subscriber.borrow_book(&selected_sub->subscriber, &selected_book->book);
     } else {
-        printf("✗ Sélection invalide.\n");
+        printf("Selection error!\n");
     }
 }
 
-void retourner_livre() {
-    printf("\n--- RETOUR D'UN LIVRE ---\n");
-    
-    if (is_empty_list_b(bibliotheque)) {
-        printf("Aucun livre dans la bibliothèque.\n");
+void return_book(void) {
+    printf("\n--- RETURN A BOOK ---\n");
+
+    if (is_empty_list_b(library)) {
+        printf("No books in library.\n");
         return;
     }
-    
-    if (is_empty_list(abonnes)) {
-        printf("Aucun abonné enregistré.\n");
+
+    if (is_empty_list(subscribers)) {
+        printf("No subscribers available.\n");
         return;
     }
-    
-    // Afficher les livres non disponibles
-    printf("Livres actuellement empruntés :\n");
-    BList temp = bibliotheque;
-    int i = 1;
-    while (temp != NULL) {
-        if (temp->book.disponibility == False) {
-            printf("%d. ", i);
-            temp->book.info(&temp->book);
+
+    // Afficher les livres empruntés
+    printf("Borrowed books:\n");
+    BList temp_book = library;
+    int book_count = 0;
+
+    while (temp_book != NULL) {
+        if (temp_book->book.availability == False) {
+            printf("%d. ", ++book_count);
+            temp_book->book.info(&temp_book->book);
         }
-        temp = temp->next;
-        i++;
+        temp_book = temp_book->next;
     }
-    
+
+    if (book_count == 0) {
+        printf("No books currently borrowed.\n");
+        return;
+    }
+
     // Afficher les abonnés
-    printf("\nAbonnés :\n");
-    SList tempA = abonnes;
-    i = 1;
-    while (tempA != NULL) {
-        printf("%d. ", i);
-        tempA->subscriber.introduce_yourself(&tempA->subscriber);
-        tempA = tempA->next;
-        i++;
+    printf("\nAvailable subscribers:\n");
+    SList temp_sub = subscribers;
+    int sub_count = 0;
+    while (temp_sub != NULL) {
+        printf("%d. %s %s (ID: %d)\n", ++sub_count,
+               temp_sub->subscriber.name,
+               temp_sub->subscriber.surname,
+               temp_sub->subscriber.id);
+        temp_sub = temp_sub->next;
     }
-    
-    int choixLivre, choixAbonne;
-    printf("\nNuméro du livre à retourner : ");
-    scanf("%d", &choixLivre);
-    printf("Numéro de l'abonné : ");
-    scanf("%d", &choixAbonne);
-    vider_buffer();
-    
+
+    int book_choice, sub_choice;
+    printf("\nSelect book number to return: ");
+    if (scanf("%d", &book_choice) != 1) {
+        printf("Invalid input!\n");
+        clear_buffer();
+        return;
+    }
+
+    printf("Select subscriber number: ");
+    if (scanf("%d", &sub_choice) != 1) {
+        printf("Invalid input!\n");
+        clear_buffer();
+        return;
+    }
+    clear_buffer();
+
+    // Vérifier si le choix du livre est valide
+    if (book_choice < 1 || book_choice > book_count) {
+        printf("Invalid book selection!\n");
+        return;
+    }
+
+    // Vérifier si le choix de l'abonné est valide
+    if (sub_choice < 1 || sub_choice > sub_count) {
+        printf("Invalid subscriber selection!\n");
+        return;
+    }
+
     // Trouver le livre sélectionné
-    BList livreSelect = bibliotheque;
-    int compteur = 1;
-    while (livreSelect != NULL && compteur < choixLivre) {
-        if (livreSelect->book.disponibility == False) {
-            compteur++;
+    BList selected_book = library;
+    int current_book = 0;
+    while (selected_book != NULL) {
+        if (selected_book->book.availability == False) {
+            current_book++;
+            if (current_book == book_choice) break;
         }
-        if (compteur < choixLivre) {
-            livreSelect = livreSelect->next;
-        }
+        selected_book = selected_book->next;
     }
-    
+
     // Trouver l'abonné sélectionné
-    SList abonneSelect = abonnes;
-    compteur = 1;
-    while (abonneSelect != NULL && compteur < choixAbonne) {
-        abonneSelect = abonneSelect->next;
-        compteur++;
+    SList selected_sub = subscribers;
+    int current_sub = 0;
+    while (selected_sub != NULL) {
+        current_sub++;
+        if (current_sub == sub_choice) break;
+        selected_sub = selected_sub->next;
     }
-    
-    if (livreSelect != NULL && abonneSelect != NULL) {
-        abonneSelect->subscriber.giveback_book(&abonneSelect->subscriber, &livreSelect->book);
-        printf("✓ Opération de retour effectuée.\n");
+
+    if (selected_book != NULL && selected_sub != NULL) {
+        selected_sub->subscriber.giveback_book(&selected_sub->subscriber, &selected_book->book);
     } else {
-        printf("✗ Sélection invalide.\n");
+        printf("Selection error!\n");
     }
 }
 
-void afficher_historique_abonne() {
-    printf("\n--- HISTORIQUE D'UN ABONNE ---\n");
-    
-    if (is_empty_list(abonnes)) {
-        printf("Aucun abonné enregistré.\n");
+void search_book_by_isbn(void) {
+    printf("\n--- SEARCH BOOK BY ISBN ---\n");
+
+    if (is_empty_list_b(library)) {
+        printf("No books in the library.\n");
         return;
     }
-    
-    // Afficher les abonnés
-    printf("Abonnés disponibles :\n");
-    SList temp = abonnes;
-    int i = 1;
-    while (temp != NULL) {
-        printf("%d. ", i);
-        temp->subscriber.introduce_yourself(&temp->subscriber);
-        temp = temp->next;
-        i++;
+
+    int isbn;
+    printf("Enter ISBN: ");
+    if (scanf("%d", &isbn) != 1) {
+        printf("Invalid ISBN!\n");
+        clear_buffer();
+        return;
     }
-    
-    int choix;
-    printf("\nNuméro de l'abonné : ");
-    scanf("%d", &choix);
-    vider_buffer();
-    
-    // Trouver l'abonné sélectionné
-    SList abonneSelect = abonnes;
-    int compteur = 1;
-    while (abonneSelect != NULL && compteur < choix) {
-        abonneSelect = abonneSelect->next;
-        compteur++;
-    }
-    
-    if (abonneSelect != NULL) {
-        printf("\nHistorique de %s %s :\n", 
-               abonneSelect->subscriber.name, 
-               abonneSelect->subscriber.surname);
-        print_stack(abonneSelect->subscriber.history);
+    clear_buffer();
+
+    if (searchBook_b(library, isbn)) {
+        printf("Book with ISBN %d is in the library.\n", isbn);
     } else {
-        printf("✗ Abonné non trouvé.\n");
+        printf("Book with ISBN %d is not found.\n", isbn);
     }
 }
 
-void tester_pile() {
-    printf("\n--- TEST DES FONCTIONS DE PILE ---\n");
-    
-    Stack pileTest = new_stack();
-    int choix;
-    
-    do {
-        printf("\nMenu Pile :\n");
-        printf("1. Créer une nouvelle pile\n");
-        printf("2. Vérifier si la pile est vide\n");
-        printf("3. Empiler un élément\n");
-        printf("4. Dépiler un élément\n");
-        printf("5. Afficher la pile\n");
-        printf("6. Vider la pile\n");
-        printf("7. Rechercher un ISBN dans la pile\n");
-        printf("0. Retour\n");
-        printf("Votre choix : ");
-        scanf("%d", &choix);
-        vider_buffer();
-        
-        switch(choix) {
-            case 1:
-                pileTest = new_stack();
-                printf("✓ Nouvelle pile créée.\n");
-                break;
-                
-            case 2:
-                if (is_empty_stack(pileTest)) {
-                    printf("La pile est vide.\n");
-                } else {
-                    printf("La pile n'est pas vide.\n");
-                }
-                break;
-                
-            case 3: {
-                // Créer un livre pour la pile
-                Book livrePile;
-                printf("Titre du livre : ");
-                char titre[33];
-                scanf("%32s", titre);
-                strcpy(livrePile.title, titre);
-                
-                printf("Auteur : ");
-                char auteur[15];
-                scanf("%14s", auteur);
-                strcpy(livrePile.autor, auteur);
-                
-                printf("ISBN : ");
-                scanf("%d", &livrePile.ISBN);
-                vider_buffer();
-                
-                printf("Année : ");
-                scanf("%d", &livrePile.pubYear);
-                vider_buffer();
-                
-                livrePile.disponibility = True;
-                livrePile.init_book = init;
-                livrePile.set_disponibility = set_disp;
-                livrePile.info = book_info;
-                livrePile.is_available = get_available;
-                
-                printf("Type de transaction (1: Emprunt, 2: Retour) : ");
-                int type;
-                scanf("%d", &type);
-                vider_buffer();
-                
-                Transaction trans = (type == 1) ? borrow : revert;
-                pileTest = push_stack(pileTest, &livrePile, trans);
-                printf("✓ Élément empilé.\n");
-                break;
-            }
-                
-            case 4:
-                if (is_empty_stack(pileTest)) {
-                    printf("La pile est vide, impossible de dépiler.\n");
-                } else {
-                    pileTest = pop_stack(pileTest);
-                    printf("✓ Élément dépilé.\n");
-                }
-                break;
-                
-            case 5:
-                printf("Contenu de la pile :\n");
-                print_stack(pileTest);
-                break;
-                
-            case 6:
-                while (!is_empty_stack(pileTest)) {
-                    pileTest = pop_stack(pileTest);
-                }
-                printf("✓ Pile vidée.\n");
-                break;
-                
-            case 7: {
-                if (is_empty_stack(pileTest)) {
-                    printf("La pile est vide.\n");
-                } else {
-                    int isbn;
-                    printf("ISBN à rechercher : ");
-                    scanf("%d", &isbn);
-                    vider_buffer();
-                    
-                    if (contains(pileTest, isbn)) {
-                        printf("✓ ISBN %d trouvé dans la pile.\n", isbn);
-                    } else {
-                        printf("✗ ISBN %d non trouvé.\n", isbn);
-                    }
-                }
-                break;
-            }
-                
-            case 0:
-                // Libérer la pile avant de quitter
-                while (!is_empty_stack(pileTest)) {
-                    pileTest = pop_stack(pileTest);
-                }
-                break;
-                
-            default:
-                printf("Choix invalide.\n");
-        }
-    } while(choix != 0);
+void search_subscriber_by_id(void) {
+    printf("\n--- SEARCH SUBSCRIBER BY ID ---\n");
+
+    if (is_empty_list(subscribers)) {
+        printf("No subscribers registered.\n");
+        return;
+    }
+
+    int id;
+    printf("Enter subscriber ID: ");
+    if (scanf("%d", &id) != 1) {
+        printf("Invalid ID!\n");
+        clear_buffer();
+        return;
+    }
+    clear_buffer();
+
+    if (searchSubs(subscribers, id)) {
+        printf("Subscriber with ID %d is registered.\n", id);
+    } else {
+        printf("Subscriber with ID %d is not found.\n", id);
+    }
 }
 
-void vider_buffer() {
+void display_subscriber_history(void) {
+    printf("\n--- DISPLAY SUBSCRIBER HISTORY ---\n");
+
+    if (is_empty_list(subscribers)) {
+        printf("No subscribers registered.\n");
+        return;
+    }
+
+    // Afficher les abonnés
+    printf("Subscribers:\n");
+    SList temp_sub = subscribers;
+    int sub_count = 0;
+    while (temp_sub != NULL) {
+        printf("%d. %s %s (ID: %d)\n", ++sub_count,
+               temp_sub->subscriber.name,
+               temp_sub->subscriber.surname,
+               temp_sub->subscriber.id);
+        temp_sub = temp_sub->next;
+    }
+
+    int sub_choice;
+    printf("\nSelect subscriber number: ");
+    if (scanf("%d", &sub_choice) != 1) {
+        printf("Invalid input!\n");
+        clear_buffer();
+        return;
+    }
+    clear_buffer();
+
+    // Vérifier si le choix est valide
+    if (sub_choice < 1 || sub_choice > sub_count) {
+        printf("Invalid subscriber selection!\n");
+        return;
+    }
+
+    // Trouver l'abonné sélectionné
+    SList selected_sub = subscribers;
+    int current_sub = 0;
+    while (selected_sub != NULL) {
+        current_sub++;
+        if (current_sub == sub_choice) break;
+        selected_sub = selected_sub->next;
+    }
+
+    if (selected_sub != NULL) {
+        printf("\nHistory of %s %s:\n",
+               selected_sub->subscriber.name,
+               selected_sub->subscriber.surname);
+        print_stack((Stack)selected_sub->subscriber.history);
+    } else {
+        printf("Subscriber not found!\n");
+    }
+}
+
+void clear_buffer(void) {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
