@@ -81,19 +81,23 @@
         *q = a/b;
     }
 
-    void bubbleSort(int *array, int arrayLength){
-        int i = 0;
-        int j = 0;
-        for(i = 0; i < arrayLength; i++){
-            for(j = 0; j < arrayLength - i; j++){
-                if( *(array + j) > *(array + j + 1)){
-                  swapValue((array + j), (array + j + 1));  
-                }  
-           }
-            
+    void bubbleSort(int *array, int arrayLength) {
+        int i, j;
+        int swapped;
+    
+        for (i = 0; i < arrayLength - 1; i++) {
+            swapped = 0; // Optimisation : détecte si un échange a eu lieu
+            for (j = 0; j < arrayLength - i - 1; j++) {
+                if (*(array + j) > *(array + j + 1)) {
+                    swapValue((array + j), (array + j + 1));
+                    swapped = 1;
+                }
+            }
+            // Si aucun échange, le tableau est trié
+            if (!swapped) break;
         }
-        printf("After sorting \n");
-    }
+        printf("After sorting\n");
+    }   
 
     void selectionSort(int *array, int arrayLength){
     int i = 0;
@@ -136,4 +140,5 @@
         for (i = 0; i < arrayLength; i++){
             printf("Value at index %d :  %d\n", i,  *(array + i));
         }  
+
     }
